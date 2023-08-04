@@ -33,7 +33,8 @@ I'm currently running six cameras on one Google Coral unit, and the single CPU t
 
 ::: notes
 
-Frigate has a first class integration with Home Assistant through MQTT. By listening in on events you can respond to objects detected in different parts of your home.
+Frigate has a first class integration with Home Assistant through MQTT.
+By listening in on events you can respond to objects detected in different parts of your home.
 
 :::
 
@@ -98,6 +99,14 @@ birdseye:
   mode: motion
 ```
 
+::: notes
+
+Birds eye is a UI piece of Frigate that will show you only cameras with activity
+Configurable to trigger on motion or different types of events
+e.g. only show me people in the dog kennel, not dogs
+
+:::
+
 ## Record
 
 ```
@@ -111,6 +120,14 @@ record:
       default: 14
 ```
 
+::: notes
+
+Record options controls how long Frigate retains videos for.
+This configuration retains all events and motion segments for two weeks.
+You can override this at a camera level, or for an event type level.
+
+:::
+
 ## Snapshots
 
 ```
@@ -123,7 +140,15 @@ snapshots:
     default: 30
 ```
 
-## Record
+::: notes
+
+Snapshots are what Frigate will save when it detects something in your videos.
+It's a snapshot of what it sees with a box showing you where it detected it
+Can be useful for debugging.
+
+:::
+
+## Cameras
 
 ```
 cameras:
@@ -136,6 +161,14 @@ cameras:
             - detect
             - rtmp
 ```
+
+::: notes
+
+The meat of the config. Where we define our camera inputs.
+Can't get into all of the options here, this is for a simple RTSP camera.
+Different cameras can require different options, there are suggestions in the project docs.
+
+:::
 
 ## Detectors
 
@@ -150,6 +183,14 @@ objects:
     - cat
     - car
 ```
+
+::: notes
+
+These are the options for a CPU detector. You shouldn't use this except for playing around.
+It'll consume too much CPU to be usable for real.
+The objects arg is a list of the type of objects you want to detect.
+
+:::
 
 ## Docker
 
@@ -180,6 +221,12 @@ docker run -d \
   ghcr.io/blakeblackshear/frigate:stable
 ```
 
+::: notes
+
+Don't do this
+
+:::
+
 ## Compose File
 
 ```
@@ -202,31 +249,76 @@ services:
       - "8554:8554"
 ```
 
+::: notes
+
+Do this
+
+:::
+
 # UI
 
 ## Cameras
 
 ![](static/cameras-view.png)
 
+::: notes
+
+Default frigate view
+Only shows snapshots, not live
+
+:::
+
 ## Birds Eye
 
 ![](static/birds-eye-view.png)
+
+::: notes
+
+Shows active cameras, can be configured for what "active" means
+
+:::
 
 ## Events
 
 ![](static/events-view.png)
 
+::: notes
+
+Shows the full list of events that your cameras have recorded.
+Can be filtered by camera, type, etc.
+
+:::
+
 ## Recordings
 
 ![](static/recordings-view.png)
+
+::: notes
+
+Shows the list of recordings for a specific camera
+Will show the events under the segment where their recording is
+
+:::
 
 ## Storage
 
 ![](static/storage-view.png)
 
+::: notes
+
+Breakdown of how much storage your videos are using
+
+:::
+
 ## Debug
 
 ![](static/debug-view.png)
+
+::: notes
+
+Will show a live view of your camera, highlighting detected objects
+
+:::
 
 ## Debug Options
 
@@ -236,11 +328,30 @@ services:
 
 ![](static/mask-creator.png)
 
+::: notes
+
+Used to create masks and zones to customize your detections.
+
+:::
+
 ## Mask Output
 
-![](static/mask-creator.png)
+![](static/mask-output.png)
+
+::: notes
+
+Can be copied and pasted into the config file to define your zones and masks
+
+:::
 
 # Advanced Deployment
+
+::: notes
+
+So that gets you to a functional, but basic deployment of Frigate.
+Here's the fun stuff.
+
+:::
 
 ## Hardware Acceleration
 
@@ -253,6 +364,14 @@ detectors:
     device: pci
 ```
 
+::: notes
+
+This is the config file for using a Coral TPU.
+If you have more than ten or so cameras, you may need more than one.
+If that's the case, you have to specify the PCI path manually
+
+:::
+
 ## Hardware Acceleration
 
 Dockerfile
@@ -263,6 +382,14 @@ devices:
   - /dev/dri/renderD128:/dev/dri/renderD128
 ```
 
+::: notes
+
+You also need to pass through the Coral (apex_0)
+And the video hardware acceleration if desired.
+The above is for a QuickSync device
+
+:::
+
 ## MQTT
 
 ```
@@ -271,6 +398,13 @@ mqtt:
   user: frigate
   password: password
 ```
+
+::: notes
+
+This is how Frigate will communicate with HA
+Or any other MQTT capable service
+
+:::
 
 ## Split Feeds
 
@@ -290,6 +424,13 @@ cameras:
             - rtmp
 ```
 
+::: notes
+
+Some cameras offer a full quality feed as well as alow quality one
+This example is only recoring the high quality, and using the low quality for object detection (faster) and restreaming to other devices.
+
+:::
+
 ## Objects per Camera
 
 ```
@@ -301,6 +442,12 @@ cameras:
         - cat
         - dog
 ```
+
+::: notes
+
+You can configure which types of objects are reported for each camera
+
+:::
 
 ## Masks & Zones
 
@@ -329,6 +476,15 @@ cameras:
             coordinates: 492,266,491,299,404,277
 ```
 
+::: notes
+
+This is where you would copy the coords from the zone editor we showed off earlier.
+You can mask of motion areas, so they won't trigger detection
+Mask of certain areas for certain objects (This is so my doorbell won't trigger on cars in the street)
+Make zones so your alerts can specify where an event happened.
+
+:::
+
 # Home Assistant
 
 ## Automations
@@ -344,9 +500,21 @@ condition:
   - "{{ trigger.payload_json['after']['label'] == 'person' }}"
 ```
 
+::: notes
+
+This is a simple example of a trigger and condition to fire off some action in HA
+
+:::
+
 ## Automations
 
 [https://github.com/SgtBatten/HA_blueprints](https://github.com/SgtBatten/HA_blueprints)
+
+::: notes
+
+If you want notifications though, there's a great bluebrint that makes it super easy.
+
+:::
 
 ## Dashboard
 
@@ -358,13 +526,55 @@ type: picture-entity
 entity: camera.doorbell
 ```
 
+::: notes
+
+You can use the default picture card to get the current snapshot of a camera on your dashboard
+
+:::
+
+## Dashboard
+
+[https://github.com/dermotduffy/frigate-hass-card](https://github.com/dermotduffy/frigate-hass-card)
+
+::: notes
+
+But this card gives you live video, the ability to see events, and swap between cameras
+
+:::
+
 # General Advice
 
 ## Google Coral
 
+- [https://coral.ai/](https://coral.ai/)
+- Buy One
+
+::: notes
+
+No notes.
+If you want to run Frigate, you should invest in one.
+The're under $50 and come in USB, PCIE, MiniPCI
+
+:::
+
 ## Dedicated Machine
 
+- (Much) Easier Hardware Config
+- Storage Options
+
+::: notes
+
+I didn't do this. I wish I had.
+Does not like to run in a VM.
+Hard to get running in LXC on Proxmox.
+
+:::
+
 ## Hardwired Cameras
+
+- Preserve WiFi Bandwidth
+- Security
+- Reliability
 
 # What Else ya Got?
 
@@ -375,6 +585,16 @@ https://github.com/skrashevich/double-take
 ## Bird ID
 
 https://github.com/mmcc-xx/WhosAtMyFeeder
+
+# Further Reading
+
+## Official Page
+
+[https://docs.frigate.video/](https://docs.frigate.video/)
+
+## Frigate HA Integration
+
+[https://github.com/blakeblackshear/frigate-hass-integration](https://github.com/blakeblackshear/frigate-hass-integration)
 
 # The End
 
